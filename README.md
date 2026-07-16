@@ -2,6 +2,8 @@
 
 A lightweight full-text search engine built in Python.
 
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/Ravikalakoti?logo=github)](https://github.com/sponsors/Ravikalakoti)
+
 SearchForge provides fast document indexing, ranking, fuzzy search, autocomplete, highlighting, metadata filtering, persistent storage, and a command-line interface.
 
 ## Installation
@@ -163,6 +165,15 @@ twine upload dist/*
 ## License
 
 MIT License.
+
+## Support
+
+If you find SearchForge useful, consider supporting my open source work.
+
+Your support helps me continue building and maintaining open source Python projects.
+
+⭐ Sponsor me on GitHub:
+https://github.com/sponsors/Ravikalakoti
 
 ## Author
 
