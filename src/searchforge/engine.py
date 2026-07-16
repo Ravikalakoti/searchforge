@@ -10,23 +10,14 @@ from .query import QueryProcessor
 from .ranking import TFIDFRanker
 from .storage import JSONStorage
 from .results import SearchResult
+from .document import Document
 
 
 class SearchEngine:
-    """
-    High level search interface.
-
-    Handles:
-    - Document indexing
-    - Query processing
-    - Ranking
-    - Persistence
-    """
-
 
     def __init__(
         self,
-        storage_path: str = "searchforge.json",
+        storage_path="searchforge.json",
     ):
 
         self.normalizer = Normalizer()
@@ -52,27 +43,33 @@ class SearchEngine:
         self,
         document_id: int,
         text: str,
+        metadata: dict | None = None,
     ) -> None:
         """
-        Add document into search engine.
+        Add document with metadata.
         """
 
         cleaned_text = self.normalizer.normalize(
             text
         )
 
-
         tokens = self.tokenizer.tokenize(
             cleaned_text
         )
-
 
         tokens = self.stopwords.remove(
             tokens
         )
 
 
-        self.documents[document_id] = tokens
+        document = Document(
+            document_id=document_id,
+            content=tokens,
+            metadata=metadata or {},
+        )
+
+
+        self.documents[document_id] = document
 
 
         self.index.add_document(
@@ -86,10 +83,9 @@ class SearchEngine:
         query: str,
         limit: int = 10,
         offset: int = 0,
+        filters: dict | None = None,
     ) -> list[SearchResult]:
-        """
-        Search documents and return ranked results.
-        """
+
 
         query_tokens = self.query_processor.process(
             query
@@ -110,13 +106,31 @@ class SearchEngine:
             )
 
 
-        matched_documents = {
+        matched_documents = {}
 
-            doc_id: self.documents[doc_id]
 
-            for doc_id in matched_ids
+        for doc_id in matched_ids:
 
-        }
+            document = self.documents[doc_id]
+
+
+            if filters:
+
+                match = all(
+                    document.metadata.get(key)
+                    == value
+
+                    for key, value
+                    in filters.items()
+                )
+
+                if not match:
+                    continue
+
+
+            matched_documents[doc_id] = (
+                document.content
+            )
 
 
         ranked_results = self.ranker.rank(
@@ -130,14 +144,16 @@ class SearchEngine:
 
         for doc_id, score in ranked_results:
 
-            results.append(
+            document = self.documents[doc_id]
 
+
+            results.append(
                 SearchResult(
                     document_id=doc_id,
                     score=score,
-                    content=self.documents[doc_id],
+                    content=document.content,
+                    metadata=document.metadata,
                 )
-
             )
 
 
@@ -147,40 +163,46 @@ class SearchEngine:
         ]
 
 
-    def save(self) -> None:
-        """
-        Save documents.
-        """
+    def save(self):
 
-        self.storage.save(
-            self.documents
-        )
+        data = {}
 
+        for doc_id, document in self.documents.items():
 
-    def load(self) -> None:
-        """
-        Load documents and rebuild index.
-        """
-
-        loaded_documents = self.storage.load()
+            data[doc_id] = {
+                "content": document.content,
+                "metadata": document.metadata,
+            }
 
 
-        self.documents = {
+        self.storage.save(data)
 
-            int(doc_id): tokens
 
-            for doc_id, tokens
-            in loaded_documents.items()
 
-        }
+    def load(self):
+
+        loaded = self.storage.load()
+
+
+        self.documents = {}
 
 
         self.index.clear()
 
 
-        for doc_id, tokens in self.documents.items():
+        for doc_id, data in loaded.items():
+
+            document = Document(
+                document_id=int(doc_id),
+                content=data["content"],
+                metadata=data["metadata"],
+            )
+
+
+            self.documents[int(doc_id)] = document
+
 
             self.index.add_document(
-                doc_id,
-                tokens
+                int(doc_id),
+                document.content
             )
