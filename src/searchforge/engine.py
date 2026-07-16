@@ -134,6 +134,11 @@ class SearchEngine:
             query
         )
 
+        stored = self.analytics_storage.load()
+
+        for query_name, count in stored.items():
+            self.analytics.queries[query_name] = count
+
         self.analytics.track(
             query
         )
