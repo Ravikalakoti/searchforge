@@ -1,0 +1,2 @@
+Python Django developer building REST APIs and search engines.
+I love Python and backend development.
