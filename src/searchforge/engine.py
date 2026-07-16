@@ -134,11 +134,6 @@ class SearchEngine:
             query
         )
 
-        stored = self.analytics_storage.load()
-
-        for query_name, count in stored.items():
-            self.analytics.queries[query_name] = count
-
         self.analytics.track(
             query
         )
@@ -404,14 +399,6 @@ class SearchEngine:
         """
         Return popular search queries.
         """
-
-        stored = self.analytics_storage.load()
-
-
-        for query, count in stored.items():
-
-            self.analytics.queries[query] = count
-
 
         return self.analytics.popular_queries(
             limit
