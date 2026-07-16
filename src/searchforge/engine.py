@@ -11,9 +11,21 @@ from .ranking import TFIDFRanker
 from .storage import JSONStorage
 from .results import SearchResult
 from .document import Document
+from .highlight import Highlighter
 
 
 class SearchEngine:
+    """
+    High level search engine.
+
+    Features:
+    - Document indexing
+    - Metadata filtering
+    - Ranking
+    - Persistence
+    - Highlighting
+    """
+
 
     def __init__(
         self,
@@ -32,6 +44,8 @@ class SearchEngine:
 
         self.ranker = TFIDFRanker()
 
+        self.highlighter = Highlighter()
+
         self.documents = {}
 
         self.storage = JSONStorage(
@@ -46,16 +60,18 @@ class SearchEngine:
         metadata: dict | None = None,
     ) -> None:
         """
-        Add document with metadata.
+        Add document into engine.
         """
 
         cleaned_text = self.normalizer.normalize(
             text
         )
 
+
         tokens = self.tokenizer.tokenize(
             cleaned_text
         )
+
 
         tokens = self.stopwords.remove(
             tokens
@@ -85,6 +101,9 @@ class SearchEngine:
         offset: int = 0,
         filters: dict | None = None,
     ) -> list[SearchResult]:
+        """
+        Search documents.
+        """
 
 
         query_tokens = self.query_processor.process(
@@ -116,15 +135,18 @@ class SearchEngine:
 
             if filters:
 
-                match = all(
+                is_match = all(
+
                     document.metadata.get(key)
                     == value
 
                     for key, value
                     in filters.items()
+
                 )
 
-                if not match:
+
+                if not is_match:
                     continue
 
 
@@ -147,13 +169,35 @@ class SearchEngine:
             document = self.documents[doc_id]
 
 
-            results.append(
-                SearchResult(
-                    document_id=doc_id,
-                    score=score,
-                    content=document.content,
-                    metadata=document.metadata,
+            readable_content = " ".join(
+                document.content
+            )
+
+
+            highlight = (
+                self.highlighter.highlight(
+                    readable_content,
+                    query_tokens,
                 )
+            )
+
+
+            results.append(
+
+                SearchResult(
+
+                    document_id=doc_id,
+
+                    score=score,
+
+                    content=document.content,
+
+                    metadata=document.metadata,
+
+                    highlight=highlight,
+
+                )
+
             )
 
 
@@ -163,23 +207,34 @@ class SearchEngine:
         ]
 
 
-    def save(self):
+    def save(self) -> None:
+        """
+        Save documents.
+        """
 
         data = {}
+
 
         for doc_id, document in self.documents.items():
 
             data[doc_id] = {
+
                 "content": document.content,
+
                 "metadata": document.metadata,
+
             }
 
 
-        self.storage.save(data)
+        self.storage.save(
+            data
+        )
 
 
-
-    def load(self):
+    def load(self) -> None:
+        """
+        Load documents and rebuild index.
+        """
 
         loaded = self.storage.load()
 
@@ -192,10 +247,15 @@ class SearchEngine:
 
         for doc_id, data in loaded.items():
 
+
             document = Document(
+
                 document_id=int(doc_id),
+
                 content=data["content"],
+
                 metadata=data["metadata"],
+
             )
 
 
@@ -203,6 +263,9 @@ class SearchEngine:
 
 
             self.index.add_document(
+
                 int(doc_id),
+
                 document.content
+
             )
