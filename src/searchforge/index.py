@@ -1,24 +1,30 @@
 """
-Inverted index implementation.
+Optimized inverted index implementation.
 
-Maps words/tokens to document IDs for fast search.
+Stores token frequency per document.
 """
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 
 class InvertedIndex:
     """
-    Stores token to document mapping.
+    Stores token -> document frequency mapping.
 
     Example:
 
-    python -> {1, 2}
-    django -> {1}
+    python -> {
+        1: 2,
+        2: 1
+    }
     """
 
+
     def __init__(self):
-        self.index = defaultdict(set)
+
+        self.index = defaultdict(dict)
+
+
 
     def add_document(
         self,
@@ -29,8 +35,19 @@ class InvertedIndex:
         Add document tokens into index.
         """
 
-        for token in tokens:
-            self.index[token].add(document_id)
+
+        frequencies = Counter(
+            tokens
+        )
+
+
+        for token, count in frequencies.items():
+
+            self.index[token][
+                document_id
+            ] = count
+
+
 
     def remove_document(
         self,
@@ -40,12 +57,23 @@ class InvertedIndex:
         Remove document from index.
         """
 
-        for token in list(self.index.keys()):
-            self.index[token].discard(document_id)
 
-            # Remove empty tokens
+        for token in list(
+            self.index.keys()
+        ):
+
+
+            self.index[token].pop(
+                document_id,
+                None
+            )
+
+
             if not self.index[token]:
+
                 del self.index[token]
+
+
 
     def search(
         self,
@@ -55,14 +83,57 @@ class InvertedIndex:
         Find documents containing token.
         """
 
+
+        return set(
+            self.index.get(
+                token,
+                {}
+            ).keys()
+        )
+
+
+
+    def term_frequency(
+        self,
+        token: str,
+        document_id: int,
+    ) -> int:
+        """
+        Return token frequency in document.
+        """
+
+
         return self.index.get(
             token,
-            set()
+            {}
+        ).get(
+            document_id,
+            0
         )
+
+
+
+    def document_frequency(
+        self,
+        token: str,
+    ) -> int:
+        """
+        Number of documents containing token.
+        """
+
+
+        return len(
+            self.index.get(
+                token,
+                {}
+            )
+        )
+
+
 
     def clear(self) -> None:
         """
-        Clear complete index.
+        Clear index.
         """
 
         self.index.clear()
