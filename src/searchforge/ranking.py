@@ -30,13 +30,14 @@ class TFIDFRanker:
 
         return count / len(document)
 
+
     def inverse_document_frequency(
         self,
         term: str,
         documents: dict[int, list[str]],
     ) -> float:
         """
-        Calculate IDF score.
+        Calculate IDF score with smoothing.
         """
 
         total_documents = len(documents)
@@ -47,13 +48,11 @@ class TFIDFRanker:
             if term in doc
         )
 
-        if matching_documents == 0:
-            return 0.0
-
         return math.log(
-            total_documents /
-            matching_documents
-        )
+            (total_documents + 1)
+            /
+            (matching_documents + 1)
+        ) + 1
 
     def score(
         self,

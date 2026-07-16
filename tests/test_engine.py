@@ -1,7 +1,7 @@
 from searchforge.engine import SearchEngine
 
 
-def test_search_engine():
+def test_multi_word_search():
 
     engine = SearchEngine()
 
@@ -12,11 +12,12 @@ def test_search_engine():
 
     engine.add_document(
         2,
-        "Python Web Framework"
+        "Java Developer"
     )
 
     result = engine.search(
-        "python"
+        "Django Python"
     )
 
-    assert result[0][0] in [1,2]
+    assert result[0][0] == 1
+

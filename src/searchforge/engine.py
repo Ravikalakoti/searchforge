@@ -67,14 +67,20 @@ class SearchEngine:
             query
         )
 
-        matched_documents = {}
+        if not query_tokens:
+            return []
 
-        for doc_id in self.index.search(
-            query_tokens[0]
-        ):
-            matched_documents[doc_id] = (
-                self.documents[doc_id]
+        matched_ids = set()
+
+        for token in query_tokens:
+            matched_ids.update(
+                self.index.search(token)
             )
+
+        matched_documents = {
+            doc_id: self.documents[doc_id]
+            for doc_id in matched_ids
+        }
 
         return self.ranker.rank(
             query_tokens,
