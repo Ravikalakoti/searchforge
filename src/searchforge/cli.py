@@ -5,12 +5,16 @@ SearchForge CLI.
 import argparse
 
 from .engine import SearchEngine
+from .version import __version__
 
 
 engine = SearchEngine()
 
 
-def add_document(path: str):
+
+def add_document(
+    path: str,
+):
 
     with open(
         path,
@@ -28,7 +32,7 @@ def add_document(path: str):
 
     engine.add_document(
         document_id,
-        content
+        content,
     )
 
 
@@ -41,7 +45,9 @@ def add_document(path: str):
 
 
 
-def search(query: str):
+def search(
+    query: str,
+):
 
     engine.load()
 
@@ -49,6 +55,15 @@ def search(query: str):
     results = engine.search(
         query
     )
+
+
+    if not results:
+
+        print(
+            "No results found"
+        )
+
+        return
 
 
     for result in results:
@@ -88,35 +103,50 @@ def main():
     )
 
 
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"searchforge {__version__}",
+    )
+
+
     subparsers = parser.add_subparsers(
         dest="command"
     )
 
 
     add_parser = subparsers.add_parser(
-        "add"
+        "add",
+        help="Add a document",
     )
 
+
     add_parser.add_argument(
-        "file"
+        "file",
+        help="Path to text file",
     )
 
 
     search_parser = subparsers.add_parser(
-        "search"
+        "search",
+        help="Search documents",
     )
 
+
     search_parser.add_argument(
-        "query"
+        "query",
+        help="Search query",
     )
 
 
     subparsers.add_parser(
-        "stats"
+        "stats",
+        help="Show search analytics",
     )
 
 
     args = parser.parse_args()
+
 
 
     if args.command == "add":
