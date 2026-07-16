@@ -3,21 +3,17 @@ from searchforge import SearchEngine
 
 engine = SearchEngine()
 
-
 engine.add_document(
     1,
-    "Django is a powerful Python framework"
-)
-
-engine.add_document(
-    2,
-    "Python is used for machine learning"
+    "Django Python Developer"
 )
 
 
 results = engine.search(
-    "python"
+    "python",
+    limit=5
 )
 
 
-print(results)
+for result in results:
+    print(result)

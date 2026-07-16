@@ -9,6 +9,7 @@ from .index import InvertedIndex
 from .query import QueryProcessor
 from .ranking import TFIDFRanker
 from .storage import JSONStorage
+from .results import SearchResult
 
 
 class SearchEngine:
@@ -22,12 +23,16 @@ class SearchEngine:
     - Persistence
     """
 
+
     def __init__(
         self,
         storage_path: str = "searchforge.json",
     ):
+
         self.normalizer = Normalizer()
+
         self.tokenizer = Tokenizer()
+
         self.stopwords = StopWords()
 
         self.index = InvertedIndex()
@@ -56,15 +61,19 @@ class SearchEngine:
             text
         )
 
+
         tokens = self.tokenizer.tokenize(
             cleaned_text
         )
+
 
         tokens = self.stopwords.remove(
             tokens
         )
 
+
         self.documents[document_id] = tokens
+
 
         self.index.add_document(
             document_id,
@@ -75,14 +84,17 @@ class SearchEngine:
     def search(
         self,
         query: str,
-    ) -> list[tuple[int, float]]:
+        limit: int = 10,
+        offset: int = 0,
+    ) -> list[SearchResult]:
         """
-        Search documents and rank results.
+        Search documents and return ranked results.
         """
 
         query_tokens = self.query_processor.process(
             query
         )
+
 
         if not query_tokens:
             return []
@@ -92,26 +104,52 @@ class SearchEngine:
 
 
         for token in query_tokens:
+
             matched_ids.update(
                 self.index.search(token)
             )
 
 
         matched_documents = {
+
             doc_id: self.documents[doc_id]
+
             for doc_id in matched_ids
+
         }
 
 
-        return self.ranker.rank(
+        ranked_results = self.ranker.rank(
             query_tokens,
             matched_documents
         )
 
 
+        results = []
+
+
+        for doc_id, score in ranked_results:
+
+            results.append(
+
+                SearchResult(
+                    document_id=doc_id,
+                    score=score,
+                    content=self.documents[doc_id],
+                )
+
+            )
+
+
+        return results[
+            offset:
+            offset + limit
+        ]
+
+
     def save(self) -> None:
         """
-        Save documents to storage.
+        Save documents.
         """
 
         self.storage.save(
@@ -128,8 +166,12 @@ class SearchEngine:
 
 
         self.documents = {
+
             int(doc_id): tokens
-            for doc_id, tokens in loaded_documents.items()
+
+            for doc_id, tokens
+            in loaded_documents.items()
+
         }
 
 

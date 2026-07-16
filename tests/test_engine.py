@@ -1,4 +1,26 @@
 from searchforge.engine import SearchEngine
+from searchforge.results import SearchResult
+
+
+def test_search_engine():
+
+    engine = SearchEngine()
+
+    engine.add_document(
+        1,
+        "Django Python Developer"
+    )
+
+    engine.add_document(
+        2,
+        "Python Web Framework"
+    )
+
+    result = engine.search(
+        "python"
+    )
+
+    assert result[0].document_id in [1, 2]
 
 
 def test_engine_save_load(tmp_path):
@@ -30,6 +52,29 @@ def test_engine_save_load(tmp_path):
         "python"
     )
 
-    assert result[0][0] == 1
+    assert result[0].document_id == 1
 
 
+
+def test_search_result_object():
+
+    engine = SearchEngine()
+
+
+    engine.add_document(
+        1,
+        "Python Django Developer"
+    )
+
+    results = engine.search(
+        "python"
+    )
+
+
+    assert isinstance(
+        results[0],
+        SearchResult
+    )
+
+
+    assert results[0].document_id == 1
