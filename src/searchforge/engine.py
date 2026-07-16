@@ -14,6 +14,7 @@ from .document import Document
 from .highlight import Highlighter
 from .fuzzy import FuzzyMatcher
 from .suggest import SuggestionEngine
+from .analytics import SearchAnalytics
 
 
 class SearchEngine:
@@ -53,6 +54,8 @@ class SearchEngine:
         self.fuzzy = FuzzyMatcher()
 
         self.suggester = SuggestionEngine()
+
+        self.analytics = SearchAnalytics()
 
         self.documents = {}
 
@@ -111,7 +114,6 @@ class SearchEngine:
             )
 
 
-
     def search(
         self,
         query: str,
@@ -128,6 +130,9 @@ class SearchEngine:
             query
         )
 
+        self.analytics.track(
+            query
+        )
 
         if not query_tokens:
             return []
@@ -353,3 +358,15 @@ class SearchEngine:
                 self.suggester.add(
                     token
                 )
+
+    def popular_queries(
+        self,
+        limit: int = 10,
+        ):
+            """
+            Return popular search queries.
+            """
+
+            return self.analytics.popular_queries(
+                limit
+            )

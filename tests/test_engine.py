@@ -113,3 +113,32 @@ def test_engine_suggest():
 
 
     assert "python" in results
+
+
+def test_search_analytics():
+
+    engine = SearchEngine()
+
+
+    engine.add_document(
+        1,
+        "Python Django Developer"
+    )
+
+
+    engine.search(
+        "python"
+    )
+
+
+    engine.search(
+        "python"
+    )
+
+
+    result = engine.popular_queries()
+
+
+    assert result[0][0] == "python"
+
+    assert result[0][1] == 2
