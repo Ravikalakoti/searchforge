@@ -45,11 +45,17 @@ def add_document(
 
 
 
-def search(
-    query: str,
-):
+def search(query: str):
 
     engine.load()
+
+
+    stored = engine.analytics_storage.load()
+
+
+    for query_name, count in stored.items():
+
+        engine.analytics.queries[query_name] = count
 
 
     results = engine.search(
@@ -57,28 +63,18 @@ def search(
     )
 
 
-    if not results:
-
-        print(
-            "No results found"
-        )
-
-        return
-
-
-    for result in results:
-
-        print(
-            result.document_id,
-            "|",
-            result.score
-        )
-
-
 
 def stats():
 
     engine.load()
+
+
+    stored = engine.analytics_storage.load()
+
+
+    for query, count in stored.items():
+
+        engine.analytics.queries[query] = count
 
 
     print(
@@ -93,7 +89,6 @@ def stats():
             ":",
             count
         )
-
 
 
 def main():
