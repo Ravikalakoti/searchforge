@@ -16,6 +16,7 @@ from .fuzzy import FuzzyMatcher
 from .suggest import SuggestionEngine
 from .analytics import SearchAnalytics
 from .index_storage import IndexStorage
+from .analytics_storage import AnalyticsStorage
 
 
 class SearchEngine:
@@ -58,6 +59,7 @@ class SearchEngine:
 
         self.analytics = SearchAnalytics()
         self.index_storage = IndexStorage()
+        self.analytics_storage = AnalyticsStorage()
 
         self.documents = {}
 
@@ -134,6 +136,10 @@ class SearchEngine:
 
         self.analytics.track(
             query
+        )
+
+        self.analytics_storage.save(
+            dict(self.analytics.queries)
         )
 
         if not query_tokens:
@@ -389,11 +395,19 @@ class SearchEngine:
     def popular_queries(
         self,
         limit: int = 10,
-        ):
-            """
-            Return popular search queries.
-            """
+    ):
+        """
+        Return popular search queries.
+        """
 
-            return self.analytics.popular_queries(
-                limit
-            )
+        stored = self.analytics_storage.load()
+
+
+        for query, count in stored.items():
+
+            self.analytics.queries[query] = count
+
+
+        return self.analytics.popular_queries(
+            limit
+        )
