@@ -94,3 +94,22 @@ def test_fuzzy_search():
     )
 
     assert results[0].document_id == 1
+
+
+def test_engine_suggest():
+
+    engine = SearchEngine()
+
+
+    engine.add_document(
+        1,
+        "Python Django Developer"
+    )
+
+
+    results = engine.suggest(
+        "py"
+    )
+
+
+    assert "python" in results

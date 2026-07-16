@@ -13,6 +13,7 @@ from .results import SearchResult
 from .document import Document
 from .highlight import Highlighter
 from .fuzzy import FuzzyMatcher
+from .suggest import SuggestionEngine
 
 
 class SearchEngine:
@@ -26,6 +27,7 @@ class SearchEngine:
     - Persistence
     - Highlighting
     - Fuzzy search
+    - Autocomplete
     """
 
 
@@ -50,6 +52,8 @@ class SearchEngine:
 
         self.fuzzy = FuzzyMatcher()
 
+        self.suggester = SuggestionEngine()
+
         self.documents = {}
 
         self.storage = JSONStorage(
@@ -64,7 +68,7 @@ class SearchEngine:
         metadata: dict | None = None,
     ) -> None:
         """
-        Add document into engine.
+        Add document into search engine.
         """
 
         cleaned_text = self.normalizer.normalize(
@@ -98,6 +102,15 @@ class SearchEngine:
         )
 
 
+        # add words for autocomplete
+
+        for token in tokens:
+
+            self.suggester.add(
+                token
+            )
+
+
 
     def search(
         self,
@@ -107,7 +120,7 @@ class SearchEngine:
         filters: dict | None = None,
     ) -> list[SearchResult]:
         """
-        Search documents with fuzzy support.
+        Search documents.
         """
 
 
@@ -120,7 +133,9 @@ class SearchEngine:
             return []
 
 
+
         matched_ids = set()
+
 
 
         for token in query_tokens:
@@ -131,9 +146,9 @@ class SearchEngine:
             )
 
 
-            # fuzzy matching fallback
-            if not ids:
+            # fuzzy fallback
 
+            if not ids:
 
                 all_words = list(
                     self.index.index.keys()
@@ -162,10 +177,12 @@ class SearchEngine:
         matched_documents = {}
 
 
+
         for doc_id in matched_ids:
 
 
             document = self.documents[doc_id]
+
 
 
             if filters:
@@ -249,6 +266,22 @@ class SearchEngine:
 
 
 
+    def suggest(
+        self,
+        prefix: str,
+        limit: int = 5,
+    ) -> list[str]:
+        """
+        Return autocomplete suggestions.
+        """
+
+        return self.suggester.suggest(
+            prefix,
+            limit
+        )
+
+
+
     def save(self) -> None:
         """
         Save documents.
@@ -313,3 +346,10 @@ class SearchEngine:
                 document.content
 
             )
+
+
+            for token in document.content:
+
+                self.suggester.add(
+                    token
+                )
