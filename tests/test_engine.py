@@ -78,3 +78,19 @@ def test_search_result_object():
 
 
     assert results[0].document_id == 1
+
+
+def test_fuzzy_search():
+
+    engine = SearchEngine()
+
+    engine.add_document(
+        1,
+        "Python Django Developer"
+    )
+
+    results = engine.search(
+        "pyhton"
+    )
+
+    assert results[0].document_id == 1

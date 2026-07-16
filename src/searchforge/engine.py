@@ -12,6 +12,7 @@ from .storage import JSONStorage
 from .results import SearchResult
 from .document import Document
 from .highlight import Highlighter
+from .fuzzy import FuzzyMatcher
 
 
 class SearchEngine:
@@ -24,6 +25,7 @@ class SearchEngine:
     - Ranking
     - Persistence
     - Highlighting
+    - Fuzzy search
     """
 
 
@@ -45,6 +47,8 @@ class SearchEngine:
         self.ranker = TFIDFRanker()
 
         self.highlighter = Highlighter()
+
+        self.fuzzy = FuzzyMatcher()
 
         self.documents = {}
 
@@ -94,6 +98,7 @@ class SearchEngine:
         )
 
 
+
     def search(
         self,
         query: str,
@@ -102,7 +107,7 @@ class SearchEngine:
         filters: dict | None = None,
     ) -> list[SearchResult]:
         """
-        Search documents.
+        Search documents with fuzzy support.
         """
 
 
@@ -120,9 +125,38 @@ class SearchEngine:
 
         for token in query_tokens:
 
-            matched_ids.update(
-                self.index.search(token)
+
+            ids = self.index.search(
+                token
             )
+
+
+            # fuzzy matching fallback
+            if not ids:
+
+
+                all_words = list(
+                    self.index.index.keys()
+                )
+
+
+                similar_words = self.fuzzy.match(
+                    token,
+                    all_words
+                )
+
+
+                for word in similar_words:
+
+                    ids.update(
+                        self.index.search(word)
+                    )
+
+
+            matched_ids.update(
+                ids
+            )
+
 
 
         matched_documents = {}
@@ -130,12 +164,14 @@ class SearchEngine:
 
         for doc_id in matched_ids:
 
+
             document = self.documents[doc_id]
 
 
             if filters:
 
-                is_match = all(
+
+                matched = all(
 
                     document.metadata.get(key)
                     == value
@@ -146,13 +182,15 @@ class SearchEngine:
                 )
 
 
-                if not is_match:
+                if not matched:
                     continue
+
 
 
             matched_documents[doc_id] = (
                 document.content
             )
+
 
 
         ranked_results = self.ranker.rank(
@@ -161,25 +199,27 @@ class SearchEngine:
         )
 
 
+
         results = []
+
 
 
         for doc_id, score in ranked_results:
 
+
             document = self.documents[doc_id]
 
 
-            readable_content = " ".join(
+            text = " ".join(
                 document.content
             )
 
 
-            highlight = (
-                self.highlighter.highlight(
-                    readable_content,
-                    query_tokens,
-                )
+            highlight = self.highlighter.highlight(
+                text,
+                query_tokens
             )
+
 
 
             results.append(
@@ -201,10 +241,12 @@ class SearchEngine:
             )
 
 
+
         return results[
             offset:
             offset + limit
         ]
+
 
 
     def save(self) -> None:
@@ -231,6 +273,7 @@ class SearchEngine:
         )
 
 
+
     def load(self) -> None:
         """
         Load documents and rebuild index.
@@ -241,8 +284,8 @@ class SearchEngine:
 
         self.documents = {}
 
-
         self.index.clear()
+
 
 
         for doc_id, data in loaded.items():
@@ -260,6 +303,7 @@ class SearchEngine:
 
 
             self.documents[int(doc_id)] = document
+
 
 
             self.index.add_document(
