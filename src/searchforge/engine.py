@@ -15,6 +15,7 @@ from .highlight import Highlighter
 from .fuzzy import FuzzyMatcher
 from .suggest import SuggestionEngine
 from .analytics import SearchAnalytics
+from .index_storage import IndexStorage
 
 
 class SearchEngine:
@@ -56,6 +57,7 @@ class SearchEngine:
         self.suggester = SuggestionEngine()
 
         self.analytics = SearchAnalytics()
+        self.index_storage = IndexStorage()
 
         self.documents = {}
 
@@ -310,24 +312,25 @@ class SearchEngine:
             data
         )
 
+        self.index_storage.save(
+            dict(self.index.index)
+        )
+
 
 
     def load(self) -> None:
         """
-        Load documents and rebuild index.
+        Load documents and restore index.
         """
 
         loaded = self.storage.load()
-
 
         self.documents = {}
 
         self.index.clear()
 
 
-
         for doc_id, data in loaded.items():
-
 
             document = Document(
 
@@ -343,20 +346,44 @@ class SearchEngine:
             self.documents[int(doc_id)] = document
 
 
-
-            self.index.add_document(
-
-                int(doc_id),
-
-                document.content
-
-            )
-
+            # restore autocomplete
 
             for token in document.content:
 
                 self.suggester.add(
                     token
+                )
+
+
+        # restore persistent index
+
+        stored_index = self.index_storage.load()
+
+
+        if stored_index:
+
+            for token, docs in stored_index.items():
+
+                self.index.index[token] = {
+
+                    int(doc_id): count
+
+                    for doc_id, count in docs.items()
+
+                }
+
+        else:
+
+            # fallback: rebuild index if index file missing
+
+            for doc_id, document in self.documents.items():
+
+                self.index.add_document(
+
+                    doc_id,
+
+                    document.content
+
                 )
 
     def popular_queries(
