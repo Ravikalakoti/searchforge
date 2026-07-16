@@ -14,21 +14,34 @@ from .storage import JSONStorage
 class SearchEngine:
     """
     High level search interface.
+
+    Handles:
+    - Document indexing
+    - Query processing
+    - Ranking
+    - Persistence
     """
 
-    def __init__(self):
-
+    def __init__(
+        self,
+        storage_path: str = "searchforge.json",
+    ):
         self.normalizer = Normalizer()
         self.tokenizer = Tokenizer()
         self.stopwords = StopWords()
 
         self.index = InvertedIndex()
+
         self.query_processor = QueryProcessor()
 
         self.ranker = TFIDFRanker()
-        self.storage = JSONStorage()
 
         self.documents = {}
+
+        self.storage = JSONStorage(
+            storage_path
+        )
+
 
     def add_document(
         self,
@@ -39,10 +52,12 @@ class SearchEngine:
         Add document into search engine.
         """
 
-        cleaned = self.normalizer.normalize(text)
+        cleaned_text = self.normalizer.normalize(
+            text
+        )
 
         tokens = self.tokenizer.tokenize(
-            cleaned
+            cleaned_text
         )
 
         tokens = self.stopwords.remove(
@@ -72,22 +87,27 @@ class SearchEngine:
         if not query_tokens:
             return []
 
+
         matched_ids = set()
+
 
         for token in query_tokens:
             matched_ids.update(
                 self.index.search(token)
             )
 
+
         matched_documents = {
             doc_id: self.documents[doc_id]
             for doc_id in matched_ids
         }
 
+
         return self.ranker.rank(
             query_tokens,
             matched_documents
         )
+
 
     def save(self) -> None:
         """
@@ -101,18 +121,20 @@ class SearchEngine:
 
     def load(self) -> None:
         """
-        Load documents from storage
-        and rebuild index.
+        Load documents and rebuild index.
         """
 
         loaded_documents = self.storage.load()
+
 
         self.documents = {
             int(doc_id): tokens
             for doc_id, tokens in loaded_documents.items()
         }
 
+
         self.index.clear()
+
 
         for doc_id, tokens in self.documents.items():
 
@@ -120,4 +142,3 @@ class SearchEngine:
                 doc_id,
                 tokens
             )
-
