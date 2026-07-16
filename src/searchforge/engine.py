@@ -8,6 +8,7 @@ from .stopwords import StopWords
 from .index import InvertedIndex
 from .query import QueryProcessor
 from .ranking import TFIDFRanker
+from .storage import JSONStorage
 
 
 class SearchEngine:
@@ -25,6 +26,7 @@ class SearchEngine:
         self.query_processor = QueryProcessor()
 
         self.ranker = TFIDFRanker()
+        self.storage = JSONStorage()
 
         self.documents = {}
 
@@ -86,3 +88,36 @@ class SearchEngine:
             query_tokens,
             matched_documents
         )
+
+    def save(self) -> None:
+        """
+        Save documents to storage.
+        """
+
+        self.storage.save(
+            self.documents
+        )
+
+
+    def load(self) -> None:
+        """
+        Load documents from storage
+        and rebuild index.
+        """
+
+        loaded_documents = self.storage.load()
+
+        self.documents = {
+            int(doc_id): tokens
+            for doc_id, tokens in loaded_documents.items()
+        }
+
+        self.index.clear()
+
+        for doc_id, tokens in self.documents.items():
+
+            self.index.add_document(
+                doc_id,
+                tokens
+            )
+
