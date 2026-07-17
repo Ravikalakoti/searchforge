@@ -17,7 +17,7 @@ pip install searchforge
 ### Install from Source
 
 ```bash
-git clone https://github.com/<your-github-username>/searchforge.git
+git clone https://github.com/Ravikalakoti/searchforge.git
 cd searchforge
 pip install -e .
 ```
@@ -110,7 +110,7 @@ SearchForge
 Clone the repository:
 
 ```bash
-git clone https://github.com/<your-github-username>/searchforge.git
+git clone https://github.com/Ravikalakoti/searchforge.git
 cd searchforge
 ```
 
