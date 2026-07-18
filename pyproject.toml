@@ -2,21 +2,51 @@
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-
 [project]
 name = "searchforge"
-version = "0.1.0"
-description = "A lightweight search engine for Python applications"
+version = "0.1.1"
+description = "A lightweight full-text search engine for Python applications."
 readme = "README.md"
 requires-python = ">=3.10"
-license = {file = "LICENSE"}
+license = "MIT"
+
 authors = [
-    {name = "Ravi Singh Kalakoti"}
+    { name = "Ravi Singh Kalakoti" }
 ]
 
+keywords = [
+    "search",
+    "search-engine",
+    "full-text-search",
+    "information-retrieval",
+    "tf-idf",
+    "python",
+    "indexing",
+    "autocomplete",
+    "fuzzy-search",
+]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Text Processing",
+]
+
+[project.urls]
+Homepage = "https://github.com/Ravikalakoti/searchforge"
+Repository = "https://github.com/Ravikalakoti/searchforge"
+Documentation = "https://github.com/Ravikalakoti/searchforge#readme"
+Issues = "https://github.com/Ravikalakoti/searchforge/issues"
 
 [project.scripts]
 searchforge = "searchforge.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
