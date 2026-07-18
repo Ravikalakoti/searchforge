@@ -33,7 +33,6 @@ requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==15.0.0
 ruff==0.15.21
--e git+ssh://git@github.com/Ravikalakoti/searchforge.git@9e21f71f3ccfc2efe538f07d4ede7996b977af4a#egg=searchforge
 twine==6.2.0
 typing_extensions==4.16.0
 urllib3==2.7.0
